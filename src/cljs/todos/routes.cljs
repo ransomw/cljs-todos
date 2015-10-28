@@ -3,6 +3,7 @@
    [secretary.core :as secretary :refer-macros [defroute]]
    [goog.events :as events]
    [todos.components :as comp]
+   [todos.state :as st]
    )
 
   (:import [goog.history EventType]
@@ -13,11 +14,14 @@
 
 (defroute home-path "/" []
   (println "home-path")
-  (comp/load-home))
+  (st/set-route (home-path) {})
+  )
 
 (defroute login-path "/login" []
   (println "login-path")
-  (comp/load-login))
+  (println (login-path))
+  (st/set-route (login-path) {})
+  )
 
 (defn logout []
   (-> js/hoodie.account
@@ -50,7 +54,7 @@
     ;; (secretary/dispatch! (home-path))
     ))
 
-(defn load []
-  (comp/load-nav)
-  ;; (secretary/dispatch! (home-path))
-  (println "implementing routes"))
+;; (defn load []
+;;   (comp/load-nav)
+;;   ;; (secretary/dispatch! (home-path))
+;;   (println "implementing routes"))

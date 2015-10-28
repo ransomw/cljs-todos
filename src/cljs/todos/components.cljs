@@ -2,32 +2,11 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
+   [secretary.core :as secretary]
    [todos.dom-helpers :as domh]
+   [todos.state :as st]
+   [todos.routes :as rts]
    ))
-
-(def app-state (atom {:username js/hoodie.account.username
-                      :mstr "Hi there!"}))
-
-(defn update-atom-dict [atom-dict key val]
-  (swap!
-   atom-dict
-   (fn [m]
-     (into
-      {}
-      (map
-       (fn [[k v]]
-         (if (= k key)
-           [k val]
-           [k v])) m))))
-  )
-
-(js/hoodie.account.on
- "signin"
- #(update-atom-dict app-state :username js/hoodie.account.username))
-
-(js/hoodie.account.on
- "signout"
- #(update-atom-dict app-state :username js/hoodie.account.username))
 
 (defn nav-view [data owner]
   (om/component
@@ -56,7 +35,7 @@
    ))
 
 (defn load-nav []
-  (om/root nav-view app-state
+  (om/root nav-view st/app-state
            {:target (. js/document (getElementById "nav-main"))})
   )
 
@@ -101,7 +80,8 @@
     (-> js/hoodie.account
         (.signIn username password #js {:moveData true})
         (.done (fn [login-username]
-                 (js/alert "signed in!")))
+                 (js/alert "signed in!")
+                 (secretary/dispatch! (rts/home-path))))
         (.fail (fn [err]
                  (println "signin error")
                  (js/console.log err)
@@ -129,22 +109,38 @@
       (dom/p nil (:mstr data))
       )))
 
-(defn load-home []
-  (om/root
-   (fn [data owner]
-     (if (:username data)
-       (home-view data owner)
-       (signup-view data owner)))
-   app-state
-   {:target (. js/document (getElementById "app-main"))})
+(defn unknown-route-view [data owner]
+  (reify
+      om/IRender
+    (render [this]
+      (dom/h1 nil "Unknown route")
+      )))
+
+(defn main-view [data owner]
+  (let [route-path (:path (:route data))]
+    (println "main view got route")
+    (println route-path)
+    (cond
+      (= route-path (rts/home-path))
+        (if (:username data)
+          (home-view data owner)
+          (signup-view data owner))
+      (= route-path (rts/login-path))
+        (login-view data owner)
+      :else
+        (unknown-route-view data owner)
+        )
+    )
   )
 
-(defn load-login []
-  (om/root login-view app-state
+(defn load-main []
+  (om/root
+   main-view
+   st/app-state
    {:target (. js/document (getElementById "app-main"))})
-  )
+)
 
 (defn load []
   (load-nav)
-  (load-home)
+  (load-main)
   (println "implementing components!!"))

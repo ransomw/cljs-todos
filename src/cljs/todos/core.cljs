@@ -1,6 +1,7 @@
 (ns todos.core
   (:require
    [todos.routes :as routes]
+   [todos.components :as comp]
    [figwheel.client :as figwheel :include-macros true]
    [cljs.core.async :refer [put!]]
    [weasel.repl :as weasel]
@@ -10,7 +11,7 @@
 
 (defn main []
   (println "Hiya!!!")
-  (routes/load)
+  (comp/load)
   )
 
 ;; (figwheel/watch-and-reload
