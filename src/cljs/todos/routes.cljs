@@ -2,7 +2,6 @@
   (:require
    [secretary.core :as secretary :refer-macros [defroute]]
    [goog.events :as events]
-   [todos.components :as comp]
    [todos.state :as st]
    )
 
@@ -11,6 +10,9 @@
   )
 
 (secretary/set-config! :prefix "#")
+
+(declare home-path
+         login-path)
 
 (defroute home-path "/" []
   (println "home-path")
@@ -49,12 +51,5 @@
      h EventType.NAVIGATE
      (fn [ev]
        (secretary/dispatch! (.-token ev))))
-     ;; #(secretary/dispatch! (.-token %)))
     (doto h (.setEnabled true))
-    ;; (secretary/dispatch! (home-path))
     ))
-
-;; (defn load []
-;;   (comp/load-nav)
-;;   ;; (secretary/dispatch! (home-path))
-;;   (println "implementing routes"))
