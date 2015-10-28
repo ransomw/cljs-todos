@@ -12,7 +12,8 @@
 (secretary/set-config! :prefix "#")
 
 (declare home-path
-         login-path)
+         login-path
+         new-todo-path)
 
 (defroute home-path "/" []
   (println "home-path")
@@ -23,6 +24,10 @@
   (println "login-path")
   (println (login-path))
   (st/set-route (login-path) {})
+  )
+
+(defroute new-todo-path "/new" []
+  (st/set-route (new-todo-path) {})
   )
 
 ;; like a redirect for the client-side

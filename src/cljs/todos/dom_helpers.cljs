@@ -29,3 +29,19 @@
       "\u00a0")
      ))))
 
+
+;; todo: don't add null class name when called w/o options
+(defn li-link [href text & opts]
+  (let [classes (first opts)
+        attrs (if opts
+                {:href href :className (:a classes)}
+                {:href href})]
+    (dom/li
+     nil
+     (dom/a
+      #js {:href href :className (:a classes)}
+      ;; why does om require js literals?
+      ;; (js-obj attrs)
+      text))
+    )
+  )

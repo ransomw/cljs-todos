@@ -8,30 +8,26 @@
    ))
 
 (defn nav-view [data owner]
-  (om/component
-   (dom/div
-    nil
-    (dom/div
-     #js {:className "brand"}
-     (dom/a #js {:href "#/"} "todos"))
-    (dom/ul
-     #js {:className "actions"}
-     (if (:username data)
-       (dom/li
-        nil
-        (dom/a
-         #js {:href "#/logout"
-              :className "button"}
-         "Logout"))
-       (dom/li
-        nil
-        (dom/a
-         #js {:href "#/login"
-              :className "button"}
-         "Login"))
-       ))
-    )
-   ))
+  (let [username (:username data)]
+    (om/component
+     (dom/div
+      nil
+      (dom/div
+       #js {:className "brand"}
+       (dom/a #js {:href "#/"} "todos"))
+      (if username
+        (dom/ul
+         #js {:className "locations"}
+         (domh/li-link (rts/new-todo-path) "new todo")
+         ))
+      (dom/ul
+       #js {:className "actions"}
+       (if username
+         (domh/li-link (rts/logout-path) "Logout" {:a "button"})
+         (domh/li-link (rts/login-path) "Login" {:a "button"})
+         ))
+      )
+     )))
 
 (defn load-nav []
   (om/root nav-view st/app-state
@@ -79,7 +75,6 @@
     (-> js/hoodie.account
         (.signIn username password #js {:moveData true})
         (.done (fn [login-username]
-                 (js/alert "signed in!")
                  (rts/navigate-to (rts/home-path))))
         (.fail (fn [err]
                  (println "signin error")
@@ -91,7 +86,7 @@
 (defn login-view [data owner]
   (reify
       om/IRender
-    (render [_]
+    (render [this]
       (domh/center-div
        (dom/h3 nil "Login")
        (domh/input "Username" "text" "username")
@@ -106,6 +101,39 @@
       om/IRender
     (render [this]
       (dom/p nil (:mstr data))
+      )))
+
+(defn new-todo [data owner]
+  (let [
+        title (.-value (om/get-node owner "title"))
+        date (.-value (om/get-node owner "date"))
+        ]
+    (-> js/hoodie.store
+        (.add
+         (:todo st/store-types)
+         {:title title
+          :date date})
+        (.done (fn [todo]
+                 (rts/navigate-to (rts/home-path))))
+        (.fail (fn [err]
+                 (println "error adding todo")
+                 (js/console.log err)
+                 (js/alert "error adding todo")))
+    )
+  ))
+
+
+(defn new-todo-view [data owner]
+  (reify
+      om/IRender
+    (render [this]
+      (domh/center-div
+       (dom/h3 nil "New todo")
+       (domh/input "Todo" "text" "title")
+       (domh/input "Due" "date" "date")
+       (dom/button
+        #js {:onClick #(new-todo data owner)} "Add")
+       )
       )))
 
 (defn unknown-route-view [data owner]
@@ -126,6 +154,8 @@
           (signup-view data owner))
       (= route-path (rts/login-path))
         (login-view data owner)
+      (= route-path (rts/new-todo-path))
+        (new-todo-view data owner)
       :else
         (unknown-route-view data owner)
         )
