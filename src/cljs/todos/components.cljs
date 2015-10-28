@@ -2,7 +2,6 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [secretary.core :as secretary]
    [todos.dom-helpers :as domh]
    [todos.state :as st]
    [todos.routes :as rts]
@@ -81,7 +80,7 @@
         (.signIn username password #js {:moveData true})
         (.done (fn [login-username]
                  (js/alert "signed in!")
-                 (secretary/dispatch! (rts/home-path))))
+                 (rts/navigate-to (rts/home-path))))
         (.fail (fn [err]
                  (println "signin error")
                  (js/console.log err)

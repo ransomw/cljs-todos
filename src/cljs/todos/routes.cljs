@@ -25,12 +25,17 @@
   (st/set-route (login-path) {})
   )
 
+;; like a redirect for the client-side
+(defn navigate-to [path]
+  (secretary/dispatch! path)
+  (js/window.history.pushState #js {} "" path))
+
 (defn logout []
   (-> js/hoodie.account
       (.signOut)
       (.done
        (fn []
-         (secretary/dispatch! (home-path))))
+         (navigate-to (home-path))))
       (.fail
        (fn [err]
          (println "signout err")
