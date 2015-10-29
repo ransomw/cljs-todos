@@ -1,6 +1,7 @@
 (ns todos.dom-helpers
   (:require
    [om.dom :as dom :include-macros true]
+   [clojure.string :as str]
    ))
 
 
@@ -13,35 +14,34 @@
    )
   )
 
-(defn center-div [& elems]
-  (dom/section
-   nil
-   (dom/div
-    #js {:className "row"}
-    (dom/div
-     #js {:className "three columns"}
-     "\u00a0") ;; &nbsp
-    (dom/div
-     #js {:className "six columns"}
-     (apply dom/div nil elems)
+(defn center-div [& {:keys [out-cols in-cols]}]
+  (let [out-cols (if out-cols out-cols "three")
+        in-cols (if in-cols in-cols "six")]
+  (fn [& elems]
+    (dom/section
+     nil
      (dom/div
-      #js {:className "three columns"}
-      "\u00a0")
-     ))))
+      #js {:className "row"}
+      (dom/div
+       (clj->js {:className (str/join [out-cols " columns"])})
+       "\u00a0") ;; &nbsp
+      (dom/div
+       (clj->js {:className (str/join [in-cols " columns"])})
+       (apply dom/div nil elems)
+       (dom/div
+       (clj->js {:className (str/join [out-cols " columns"])})
+        "\u00a0")
+       ))))
+  ))
 
-
-;; todo: don't add null class name when called w/o options
-(defn li-link [href text & opts]
-  (let [classes (first opts)
-        attrs (if opts
-                {:href href :className (:a classes)}
+(defn li-link [href text & {:keys [a-class]}]
+  (let [attrs (if a-class
+                {:href href :className a-class}
                 {:href href})]
     (dom/li
      nil
      (dom/a
-      #js {:href href :className (:a classes)}
-      ;; why does om require js literals?
-      ;; (js-obj attrs)
+      (clj->js attrs)
       text))
     )
   )

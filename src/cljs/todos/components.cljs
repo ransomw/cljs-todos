@@ -23,8 +23,8 @@
       (dom/ul
        #js {:className "actions"}
        (if username
-         (domh/li-link (rts/logout-path) "Logout" {:a "button"})
-         (domh/li-link (rts/login-path) "Login" {:a "button"})
+         (domh/li-link (rts/logout-path) "Logout" :a-class "button")
+         (domh/li-link (rts/login-path) "Login" :a-class "button")
          ))
       )
      )))
@@ -57,7 +57,7 @@
   (reify
       om/IRender
     (render [_]
-      (domh/center-div
+      ((domh/center-div)
        (dom/h3 nil "Sign up")
        (domh/input "Username:" "text" "username")
        (domh/input "Password:" "password" "password")
@@ -87,7 +87,7 @@
   (reify
       om/IRender
     (render [this]
-      (domh/center-div
+      ((domh/center-div)
        (dom/h3 nil "Login")
        (domh/input "Username" "text" "username")
        (domh/input "Password" "password" "password")
@@ -111,8 +111,8 @@
     (-> js/hoodie.store
         (.add
          (:todo st/store-types)
-         {:title title
-          :date date})
+         #js {:title title
+              :date date})
         (.done (fn [todo]
                  (rts/navigate-to (rts/home-path))))
         (.fail (fn [err]
@@ -122,12 +122,11 @@
     )
   ))
 
-
 (defn new-todo-view [data owner]
   (reify
       om/IRender
     (render [this]
-      (domh/center-div
+      ((domh/center-div :out-cols "two" :in-cols "eight")
        (dom/h3 nil "New todo")
        (domh/input "Todo" "text" "title")
        (domh/input "Due" "date" "date")
