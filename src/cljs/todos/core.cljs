@@ -2,6 +2,7 @@
   (:require
    [todos.routes :as routes]
    [todos.components :as comp]
+   [todos.state :as st]
    [figwheel.client :as figwheel :include-macros true]
    [cljs.core.async :refer [put!]]
    [weasel.repl :as weasel]
@@ -11,6 +12,7 @@
 
 (defn main []
   (println "Hiya!!!")
+  (st/update-state)
   (comp/load)
   )
 

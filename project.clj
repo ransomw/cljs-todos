@@ -8,6 +8,7 @@
                  [org.clojure/clojurescript "1.7.48"]
                  [secretary "1.2.3"]
                  [org.omcljs/om "0.9.0"]
+                 [com.andrewmcveigh/cljs-time "0.3.14"]
                  ;; dev libs
                  [figwheel "0.4.1"]
                  [figwheel-sidecar "0.4.1"]

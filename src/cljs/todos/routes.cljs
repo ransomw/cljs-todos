@@ -13,7 +13,8 @@
 
 (declare home-path
          login-path
-         new-todo-path)
+         new-todo-path
+         view-todo-path)
 
 (defroute home-path "/" []
   (println "home-path")
@@ -27,13 +28,26 @@
   )
 
 (defroute new-todo-path "/new" []
+  (println "new-todo-path")
   (st/set-route (new-todo-path) {})
   )
 
+(defroute view-todo-path "/todos/:id" [id]
+  (println "view-todo-path")
+  (st/set-route (view-todo-path) {:id id}))
+
 ;; like a redirect for the client-side
 (defn navigate-to [path]
+  (println "navigate-to function")
   (secretary/dispatch! path)
-  (js/window.history.pushState #js {} "" path))
+  (js/window.open path "_self")
+  ;;;;; ?????
+  ;;; goog closure History Navigate event doesn't fire
+  ;;; if pushState is used to change URL
+  ;; (js/window.history.pushState #js {} "" path)
+  ;; (js/window.history.pushState #js {} "" path)
+  ;; (js/window.history.back)
+  )
 
 (defn logout []
   (-> js/hoodie.account
@@ -54,12 +68,16 @@
 (defroute "*" []
   (println "lost!"))
 
+;;;; todo: get rid of all the closure events stuff
+;; just listen to all click events and prevent default if URL matches
+;; will also allow using pushState and removing hash from URLS
 (defn start-routing []
   (let [h (History.)]
     (println "start-routing")
     (events/listen
      h EventType.NAVIGATE
      (fn [ev]
+       (println "navigate event")
        (secretary/dispatch! (.-token ev))))
     (doto h (.setEnabled true))
     ))

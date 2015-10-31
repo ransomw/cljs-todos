@@ -1,10 +1,12 @@
 (ns todos.components
   (:require
+   [clojure.string :as str]
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [todos.dom-helpers :as domh]
    [todos.state :as st]
    [todos.routes :as rts]
+   [todos.util :as util]
    ))
 
 (defn nav-view [data owner]
@@ -96,24 +98,65 @@
        )
       )))
 
+;; todo: don't put a border after the last elem
+(defn todo-view [todo owner]
+  (reify
+      om/IRender
+    (render [this]
+      (dom/li
+       (clj->js {:style {:width "100%"
+                         :borderBottom "solid #aaa .1em"
+                         :paddingBottom ".5em"
+                         :display "flex"
+                         :alignItems "center"
+                         :justifyContent "space-between"
+                         }})
+       (dom/a
+        (clj->js {:href (rts/view-todo-path {:id (:id todo)})
+                  })
+        (:title todo))
+       (dom/span nil (util/date-display-str (:date todo)))
+       (dom/input
+        (clj->js {:type "checkbox"
+                  :checked (:done todo)
+                  :style {
+                          :marginBottom "0" ;; override skeleton.css
+                          }
+                  :onClick #(js/hoodie.store.update
+                             (:todo st/store-types)
+                             (:id todo)
+                             #js {:done (not (:done todo))})
+                  }))
+       )
+      )))
+
 (defn home-view [data owner]
   (reify
       om/IRender
     (render [this]
-      (dom/p nil (:mstr data))
+      ((domh/center-div :out-cols "two" :in-cols "eight")
+       (apply dom/ul
+              (clj->js {:style {:listStyle "none"}})
+              (om/build-all todo-view (:todos data)))
+       )
       )))
 
 (defn new-todo [data owner]
   (let [
         title (.-value (om/get-node owner "title"))
-        date (.-value (om/get-node owner "date"))
+        description (.-value (om/get-node owner "description"))
+        date-input (.-value (om/get-node owner "date"))
+        date (if (util/date-str? date-input) date-input)
         ]
     (-> js/hoodie.store
         (.add
          (:todo st/store-types)
          #js {:title title
-              :date date})
+              :date date
+              :done false
+              :description description})
         (.done (fn [todo]
+                 (println "calling navigate-to from new-todo")
                  (rts/navigate-to (rts/home-path))))
         (.fail (fn [err]
                  (println "error adding todo")
@@ -130,8 +173,15 @@
        (dom/h3 nil "New todo")
        (domh/input "Todo" "text" "title")
        (domh/input "Due" "date" "date")
+       (dom/div
+        nil
+        (dom/label nil "Description")
+        (dom/textarea
+         #js {:ref "description"}))
        (dom/button
-        #js {:onClick #(new-todo data owner)} "Add")
+        #js {:onClick (fn []
+                        (println "Add todo onClick callback")
+                        (new-todo data owner))} "Add")
        )
       )))
 
@@ -141,6 +191,28 @@
     (render [this]
       (dom/h1 nil "Unknown route")
       )))
+
+(defn view-todo-view [data owner]
+  (let [id (:id (:params (:route data)))
+        todo (first (filter #(= id (:id %)) (:todos data)))]
+  (reify
+      om/IRender
+    (render [this]
+      (dom/div
+       nil
+       (dom/h3 nil (str/join ["Todo: " (:title todo)]))
+       (dom/h5
+        nil
+        (if (:done todo) "finished" "unfinished"))
+       (if (:date todo)
+         (dom/h5 nil (str/join
+                      ["Due: "
+                       (util/date-display-str (:date todo))]))
+         )
+       (dom/h5 nil "Description")
+       (dom/p nil (:description todo))
+       )
+      ))))
 
 (defn main-view [data owner]
   (let [route-path (:path (:route data))]
@@ -155,6 +227,8 @@
         (login-view data owner)
       (= route-path (rts/new-todo-path))
         (new-todo-view data owner)
+      (= route-path (rts/view-todo-path))
+        (view-todo-view data owner)
       :else
         (unknown-route-view data owner)
         )

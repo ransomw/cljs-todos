@@ -6,6 +6,10 @@ a {
     text-decoration: none;
 }
 
+textarea {
+  width: 100%;
+}
+
 nav {
     text-align: center;
     border-top: solid 1px;
@@ -14,6 +18,7 @@ nav {
     padding-top: 10px;
     padding-bottom: 10px;
     overflow: hidden;
+    margin-bottom: 2em;
 }
 
 nav .brand {

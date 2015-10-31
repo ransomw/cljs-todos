@@ -49,10 +49,6 @@
       (.findAll (:todo store-types))
       (.done
        (fn [todos]
-         (js/console.log todos)
-         (println "HERE")
-         (js/console.log (js->clj todos))
-         (println "THERE")
          (update-atom-dict
           app-state :todos
           (js->clj todos :keywordize-keys true))))
@@ -73,3 +69,5 @@
  (str/join [(:todo store-types) ":remove"])
  update-todos)
 
+(defn update-state []
+  (update-todos))
