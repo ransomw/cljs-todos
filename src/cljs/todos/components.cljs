@@ -98,6 +98,36 @@
        )
       )))
 
+
+(defn re-login [data owner]
+  (let [
+        password (.-value (om/get-node owner "password"))
+        ]
+    (-> js/hoodie.account
+        (.signIn js/hoodie.account.username
+                 password #js {:moveData true})
+        (.done (fn [login-username]
+                 (rts/navigate-to (rts/home-path))))
+        (.fail (fn [err]
+                 (println "signin error")
+                 (js/console.log err)
+                 (js/alert "login failed")))
+    )
+  ))
+
+(defn re-login-view [data owner]
+  (reify
+      om/IRender
+    (render [this]
+      ((domh/center-div)
+       (dom/h3 nil "Verify password")
+       (dom/h5 nil "to sync local data with server")
+       (domh/input "Password" "password" "password")
+       (dom/button
+        #js {:onClick #(re-login data owner)} "Confirm")
+       )
+      )))
+
 ;; todo: don't put a border after the last elem
 (defn todo-view [todo owner]
   (reify
@@ -229,6 +259,8 @@
         (new-todo-view data owner)
       (= route-path (rts/view-todo-path))
         (view-todo-view data owner)
+      (= route-path (rts/re-login-path))
+        (re-login-view data owner)
       :else
         (unknown-route-view data owner)
         )

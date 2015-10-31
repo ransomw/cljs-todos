@@ -14,7 +14,8 @@
 (declare home-path
          login-path
          new-todo-path
-         view-todo-path)
+         view-todo-path
+         re-login-path)
 
 (defroute home-path "/" []
   (println "home-path")
@@ -34,7 +35,12 @@
 
 (defroute view-todo-path "/todos/:id" [id]
   (println "view-todo-path")
-  (st/set-route (view-todo-path) {:id id}))
+  (st/set-route (view-todo-path) {:id id})
+  )
+
+(defroute re-login-path "/pass" []
+  (st/set-route (re-login-path) {})
+  )
 
 ;; like a redirect for the client-side
 (defn navigate-to [path]
@@ -57,9 +63,12 @@
          (navigate-to (home-path))))
       (.fail
        (fn [err]
-         (println "signout err")
-         (js/console.log err)
-         (js/alert "signout error, see log")))))
+         (if (= (.-status err) 401)
+           (navigate-to (re-login-path))
+           (do
+             (println "signout err")
+             (js/console.log err)
+             (js/alert "signout error, see log")))))))
 
 (defroute logout-path "/logout" []
   (println "logout-path")
