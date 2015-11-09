@@ -130,51 +130,72 @@
 
 ;; todo: don't put a border after the last elem
 (defn make-todo-item-view
-    "create a todo item component.  on-todo-sel argument will be called with the todo as an arg when the the given todo is clicked, and marking done will be disabled when on-todo-sel is present"
+  "create a todo item component.  on-todo-sel argument will be called with the todo as an arg when the the given todo is clicked, and marking done will be disabled when on-todo-sel is present"
   [on-todo-sel]
   (fn [todo owner]
     (reify
-        om/IRender
-      (render [this]
+        om/IInitState
+      (init-state [_]
+        {:expand true}
+        )
+      om/IRenderState
+      (render-state [this {:keys [expand]}]
+
+        (println "in todo item view, todo tree:")
+        (println todo)
+
         (dom/li
-         (clj->js {:style {:width "100%"
-                           :borderBottom "solid #aaa .1em"
-                           :paddingBottom ".5em"
-                           :display "flex"
-                           :alignItems "center"
-                           :justifyContent "space-between"
-                           }})
-         (dom/a
-          (clj->js {:href (rts/view-todo-path {:id (:id todo)})
-                    })
-          (:title todo))
-         (dom/span nil (util/date-display-str (:date todo)))
-         (if on-todo-sel
-           (dom/button
-            (clj->js {:style {:marginBottom "0"}
-                      :onClick #(on-todo-sel todo)})
-            "X")
-           (domh/checkbox (:done todo)
-                          #(js/hoodie.store.update
-                            (:todo st/store-types)
-                            (:id todo)
-                            #js {:done (not (:done todo))}))
-           )
+         nil
+         (dom/div
+          (clj->js {:style {:width "100%"
+                            :borderBottom "solid #aaa .1em"
+                            :paddingBottom ".5em"
+                            :display "flex"
+                            :alignItems "center"
+                            :justifyContent "space-between"
+                            }})
+          (dom/span
+           #js {:onClick #(om/set-state! owner :expand (not expand)) }
+           (if expand "\\/" ">"))
+          (dom/a
+           (clj->js {:href (rts/view-todo-path {:id (:id todo)})
+                     })
+           (:title todo))
+          (dom/span nil (util/date-display-str (:date todo)))
+          (if on-todo-sel
+            (dom/button
+             (clj->js {:style {:marginBottom "0"}
+                       :onClick #(on-todo-sel todo)})
+             "X")
+            (domh/checkbox (:done todo)
+                           #(js/hoodie.store.update
+                             (:todo st/store-types)
+                             (:id todo)
+                             #js {:done (not (:done todo))})))
+          )
+         (if (and (st/has-sub-todos todo) expand)
+           (apply dom/ul
+                  (clj->js {:style {:listStyle "none"}})
+                  (om/build-all
+                   (make-todo-item-view on-todo-sel)
+                   (:sub-todos todo))))
          )
         ))))
 
 (defn make-todo-list-view
   " create a todo list component.  optional on-todo-sel key argument will be called with the todo as an arg when the the given todo is clicked, and marking done will be disabled when on-todo-sel is present"
   [& {:keys [on-todo-sel]}]
-  (fn [data owner]
+  (fn [todos owner]
     (reify
         om/IRender
       (render [this]
+        (println "in todo list view, todo tree:")
+        (println (st/todo-list-to-tree todos))
         (apply dom/ul
                (clj->js {:style {:listStyle "none"}})
                (om/build-all
                 (make-todo-item-view on-todo-sel)
-                data))
+                (vec (st/todo-list-to-tree todos))))
         ))))
 
 (defn home-view [data owner]

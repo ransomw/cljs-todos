@@ -71,3 +71,30 @@
 
 (defn update-state []
   (update-todos))
+
+;; todo: this... could be cleaner, faster, but
+;;   it's correct, so test and profile first
+(defn todo-list-to-tree [todos]
+  "return trees of todos rather than a flat list structure.  all keys are the same, except :parent-id is replaced with :sub-todos vec"
+  (let [todos-no-parent (filter
+                         (fn [todo] (not (:parent-id todo)))
+                         todos)
+        todos-w-parent (filter
+                         (fn [todo] (:parent-id todo))
+                         todos)]
+    (map (fn [todo-no-parent]
+           (assoc
+            todo-no-parent
+            :sub-todos
+            (vec
+             (todo-list-to-tree
+              (map (fn [todo-w-parent]
+                     (if (= (:id todo-no-parent)
+                            (:parent-id todo-w-parent))
+                       (dissoc todo-w-parent :parent-id)
+                       todo-w-parent))
+                   todos-w-parent)))))
+         todos-no-parent)))
+
+(defn has-sub-todos [todo]
+  (not (= 0 (count (:sub-todos todo)))))
