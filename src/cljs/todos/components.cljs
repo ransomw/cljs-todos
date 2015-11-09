@@ -129,49 +129,64 @@
       )))
 
 ;; todo: don't put a border after the last elem
-(defn todo-view [todo owner]
-  (reify
-      om/IRender
-    (render [this]
-      (dom/li
-       (clj->js {:style {:width "100%"
-                         :borderBottom "solid #aaa .1em"
-                         :paddingBottom ".5em"
-                         :display "flex"
-                         :alignItems "center"
-                         :justifyContent "space-between"
-                         }})
-       (dom/a
-        (clj->js {:href (rts/view-todo-path {:id (:id todo)})
-                  })
-        (:title todo))
-       (dom/span nil (util/date-display-str (:date todo)))
-       (dom/input
-        (clj->js {:type "checkbox"
-                  :checked (:done todo)
-                  :style {
-                          :marginBottom "0" ;; override skeleton.css
-                          }
-                  :onClick #(js/hoodie.store.update
-                             (:todo st/store-types)
-                             (:id todo)
-                             #js {:done (not (:done todo))})
-                  }))
-       )
-      )))
+(defn make-todo-item-view
+    "create a todo item component.  on-todo-sel argument will be called with the todo as an arg when the the given todo is clicked, and marking done will be disabled when on-todo-sel is present"
+  [on-todo-sel]
+  (fn [todo owner]
+    (reify
+        om/IRender
+      (render [this]
+        (dom/li
+         (clj->js {:style {:width "100%"
+                           :borderBottom "solid #aaa .1em"
+                           :paddingBottom ".5em"
+                           :display "flex"
+                           :alignItems "center"
+                           :justifyContent "space-between"
+                           }})
+         (dom/a
+          (clj->js {:href (rts/view-todo-path {:id (:id todo)})
+                    })
+          (:title todo))
+         (dom/span nil (util/date-display-str (:date todo)))
+         (if on-todo-sel
+           (dom/button
+            (clj->js {:style {:marginBottom "0"}
+                      :onClick #(on-todo-sel todo)})
+            "X")
+           (domh/checkbox (:done todo)
+                          #(js/hoodie.store.update
+                            (:todo st/store-types)
+                            (:id todo)
+                            #js {:done (not (:done todo))}))
+           )
+         )
+        ))))
+
+(defn make-todo-list-view
+  " create a todo list component.  optional on-todo-sel key argument will be called with the todo as an arg when the the given todo is clicked, and marking done will be disabled when on-todo-sel is present"
+  [& {:keys [on-todo-sel]}]
+  (fn [data owner]
+    (reify
+        om/IRender
+      (render [this]
+        (apply dom/ul
+               (clj->js {:style {:listStyle "none"}})
+               (om/build-all
+                (make-todo-item-view on-todo-sel)
+                data))
+        ))))
 
 (defn home-view [data owner]
   (reify
       om/IRender
     (render [this]
       ((domh/center-div :out-cols "two" :in-cols "eight")
-       (apply dom/ul
-              (clj->js {:style {:listStyle "none"}})
-              (om/build-all todo-view (:todos data)))
+       (om/build (make-todo-list-view) (:todos data))
        )
       )))
 
-(defn new-todo [data owner]
+(defn new-todo [owner & {:keys [parent-id]}]
   (let [
         title (.-value (om/get-node owner "title"))
         description (.-value (om/get-node owner "description"))
@@ -184,7 +199,8 @@
          #js {:title title
               :date date
               :done false
-              :description description})
+              :description description
+              :parent-id parent-id})
         (.done (fn [todo]
                  (println "calling navigate-to from new-todo")
                  (rts/navigate-to (rts/home-path))))
@@ -197,8 +213,12 @@
 
 (defn new-todo-view [data owner]
   (reify
-      om/IRender
-    (render [this]
+      om/IInitState
+    (init-state [_]
+      {:parent-todo nil}
+      )
+      om/IRenderState
+    (render-state [this {:keys [parent-todo]}]
       ((domh/center-div :out-cols "two" :in-cols "eight")
        (dom/h3 nil "New todo")
        (domh/input "Todo" "text" "title")
@@ -208,10 +228,33 @@
         (dom/label nil "Description")
         (dom/textarea
          #js {:ref "description"}))
+       (dom/div
+        nil
+        (dom/label nil "Select parent todo")
+        (dom/div
+         (clj->js {:style {:width "100%"
+                           :marginBottom "2em"
+                           :display "flex"
+                           :alignItems "center"
+                           :justifyContent "space-between"
+                           }})
+         (dom/span nil (if parent-todo
+                         (:title parent-todo) "No parent selected"))
+         (dom/button
+          (clj->js {:style {:marginBottom "0"}
+                    :onClick #(om/set-state! owner :parent-todo nil)})
+          "Clear"))
+        (om/build
+         (make-todo-list-view
+          :on-todo-sel (fn [todo]
+                         (om/set-state! owner :parent-todo todo)))
+         (:todos data))
+        )
        (dom/button
         #js {:onClick (fn []
                         (println "Add todo onClick callback")
-                        (new-todo data owner))} "Add")
+                        (new-todo owner :parent-id (:id parent-todo)))
+             } "Add")
        )
       )))
 

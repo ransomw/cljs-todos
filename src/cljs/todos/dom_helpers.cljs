@@ -45,3 +45,13 @@
       text))
     )
   )
+
+(defn checkbox [checked on-click]
+  (dom/input
+   (clj->js {:type "checkbox"
+             :checked checked
+             :style {
+                     :marginBottom "0" ;; override skeleton.css
+                     }
+             :onClick on-click
+             })))
