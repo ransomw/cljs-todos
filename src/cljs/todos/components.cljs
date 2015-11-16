@@ -136,16 +136,37 @@
     (reify
         om/IInitState
       (init-state [_]
-        {:expand true}
+        (let [hidden false
+              expand true]
+          (println "init state")
+          (println (:title todo))
+          {:expand expand
+           :sub-comps
+           (om/build-all
+            (make-todo-item-view on-todo-sel)
+            (:sub-todos todo)
+            {:state {:hidden (or hidden (not expand))}})
+           }
+          )
+        )
+      om/IWillUpdate
+      (will-update [this next-props next-state]
+        (let [hide-sub-comps? (or (not (:expand next-state))
+                                  (:hidden next-state))]
+          (doall
+           (map
+            (fn [sub-comp]
+              (let [sub-comp-owner
+                    (.. sub-comp -props -children -owner)]
+                (om/set-state! sub-comp-owner :hidden hide-sub-comps?)
+              ))
+            (:sub-comps next-state)))
+          )
         )
       om/IRenderState
-      (render-state [this {:keys [expand]}]
-
-        (println "in todo item view, todo tree:")
-        (println todo)
-
+      (render-state [this {:keys [expand hidden sub-comps]}]
         (dom/li
-         nil
+         (clj->js {:hidden hidden})
          (dom/div
           (clj->js {:style {:width "100%"
                             :borderBottom "solid #aaa .1em"
@@ -155,8 +176,10 @@
                             :justifyContent "space-between"
                             }})
           (dom/span
-           #js {:onClick #(om/set-state! owner :expand (not expand)) }
-           (if expand "\\/" ">"))
+           #js {:onClick (fn []
+                           (om/set-state! owner :expand (not expand)))
+                :style #js {:height "100%"}}
+           (if expand "\u00a0\\/\u00a0" "\u00a0>\u00a0"))
           (dom/a
            (clj->js {:href (rts/view-todo-path {:id (:id todo)})
                      })
@@ -173,12 +196,11 @@
                              (:id todo)
                              #js {:done (not (:done todo))})))
           )
-         (if (and (st/has-sub-todos todo) expand)
+         (if (st/has-sub-todos todo)
            (apply dom/ul
                   (clj->js {:style {:listStyle "none"}})
-                  (om/build-all
-                   (make-todo-item-view on-todo-sel)
-                   (:sub-todos todo))))
+                  sub-comps
+                  ))
          )
         ))))
 
@@ -189,8 +211,6 @@
     (reify
         om/IRender
       (render [this]
-        (println "in todo list view, todo tree:")
-        (println (st/todo-list-to-tree todos))
         (apply dom/ul
                (clj->js {:style {:listStyle "none"}})
                (om/build-all
