@@ -4,7 +4,6 @@
    [clojure.string :as str]
    ))
 
-
 (defn input [label type ref]
   (dom/div
    nil

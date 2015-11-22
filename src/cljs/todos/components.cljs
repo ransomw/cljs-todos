@@ -4,6 +4,7 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [todos.dom-helpers :as domh]
+   [todos.component-helpers :as comh]
    [todos.state :as st]
    [todos.routes :as rts]
    [todos.util :as util]
@@ -138,17 +139,13 @@
       (init-state [_]
         (let [hidden false
               expand true]
-          (println "init state")
-          (println (:title todo))
           {:expand expand
            :sub-comps
            (om/build-all
             (make-todo-item-view on-todo-sel)
             (:sub-todos todo)
             {:state {:hidden (or hidden (not expand))}})
-           }
-          )
-        )
+           }))
       om/IWillUpdate
       (will-update [this next-props next-state]
         (let [hide-sub-comps? (or (not (:expand next-state))
@@ -160,9 +157,7 @@
                     (.. sub-comp -props -children -owner)]
                 (om/set-state! sub-comp-owner :hidden hide-sub-comps?)
               ))
-            (:sub-comps next-state)))
-          )
-        )
+            (:sub-comps next-state)))))
       om/IRenderState
       (render-state [this {:keys [expand hidden sub-comps]}]
         (dom/li
@@ -307,26 +302,62 @@
       )))
 
 (defn view-todo-view [data owner]
-  (let [id (:id (:params (:route data)))
-        todo (first (filter #(= id (:id %)) (:todos data)))]
   (reify
-      om/IRender
-    (render [this]
-      (dom/div
-       nil
-       (dom/h3 nil (str/join ["Todo: " (:title todo)]))
-       (dom/h5
-        nil
-        (if (:done todo) "finished" "unfinished"))
-       (if (:date todo)
-         (dom/h5 nil (str/join
-                      ["Due: "
-                       (util/date-display-str (:date todo))]))
+      om/IInitState
+    (init-state [_]
+      {:editing nil})
+    om/IWillUpdate
+    (will-update [this next-props next-state]
+      (let [editing (:editing next-props)
+            allowed-editing [:title :done :date :description]]
+        (if editing
+          (assert (some #{editing} allowed-editing)))
+        ))
+    om/IWillUnmount
+    (will-unmount [this]
+      ;; todo: unmount callback not getting called on navigation
+      ;; perhaps necessary to om/build components in main-view?
+      (println "in unmount")
+      (om/set-state! owner :editing nil)
+      )
+    om/IRenderState
+    (render-state [this {:keys [editing]}]
+      (let [id (:id (:params (:route data)))
+            todo (first (filter #(= id (:id %)) (:todos data)))]
+        (dom/div
+         nil
+         (comh/view-todo-attr
+          owner todo "title" :title editing :title
+          "Title" dom/input)
+         (dom/div
+          nil
+          (dom/h5
+           nil
+           (dom/span nil "Status: ")
+           (dom/span nil
+                     (if (:done todo) "finished" "unfinished"))
+           )
+          )
+         (comh/view-todo-attr
+          owner todo "date" :date editing :date
+          "Due date" dom/input :input-attrs {:type "date"})
+         (comh/view-todo-attr
+          owner todo "description" :description editing :description
+          "Description" dom/textarea)
+         (dom/button
+          #js {:onClick
+               (fn []
+                 (if (js/confirm "delete todo?")
+                   (do
+                     (rts/navigate-to (rts/home-path))
+                     (js/hoodie.store.remove
+                      (:todo st/store-types)
+                      (:id todo))
+                     )))}
+          "Delete"
+          )
          )
-       (dom/h5 nil "Description")
-       (dom/p nil (:description todo))
-       )
-      ))))
+        ))))
 
 (defn main-view [data owner]
   (let [route-path (:path (:route data))]
