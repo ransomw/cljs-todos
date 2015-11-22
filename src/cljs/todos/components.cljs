@@ -99,7 +99,6 @@
        )
       )))
 
-
 (defn re-login [data owner]
   (let [
         password (.-value (om/get-node owner "password"))
@@ -150,6 +149,9 @@
       (will-update [this next-props next-state]
         (let [hide-sub-comps? (or (not (:expand next-state))
                                   (:hidden next-state))]
+
+          (println "todo item view update")
+
           (doall
            (map
             (fn [sub-comp]
@@ -172,6 +174,9 @@
                             }})
           (dom/span
            #js {:onClick (fn []
+
+                           (println "toggle expand click")
+
                            (om/set-state! owner :expand (not expand)))
                 :style #js {:height "100%"}}
            (if expand "\u00a0\\/\u00a0" "\u00a0>\u00a0"))
@@ -238,7 +243,6 @@
               :description description
               :parent-id parent-id})
         (.done (fn [todo]
-                 (println "calling navigate-to from new-todo")
                  (rts/navigate-to (rts/home-path))))
         (.fail (fn [err]
                  (println "error adding todo")
@@ -288,7 +292,6 @@
         )
        (dom/button
         #js {:onClick (fn []
-                        (println "Add todo onClick callback")
                         (new-todo owner :parent-id (:id parent-todo)))
              } "Add")
        )
@@ -308,6 +311,9 @@
       {:editing nil})
     om/IWillUpdate
     (will-update [this next-props next-state]
+
+      (println "view todo view update")
+
       (let [editing (:editing next-props)
             allowed-editing [:title :done :date :description]]
         (if editing
@@ -317,7 +323,7 @@
     (will-unmount [this]
       ;; todo: unmount callback not getting called on navigation
       ;; perhaps necessary to om/build components in main-view?
-      (println "in unmount")
+      (println "view todo view unmount")
       (om/set-state! owner :editing nil)
       )
     om/IRenderState
@@ -350,6 +356,7 @@
                  (if (js/confirm "delete todo?")
                    (do
                      (rts/navigate-to (rts/home-path))
+                     ;; todo: handle delete with child todos
                      (js/hoodie.store.remove
                       (:todo st/store-types)
                       (:id todo))
@@ -359,28 +366,61 @@
          )
         ))))
 
+(defn get-curr-main-view [route-path logged-in?]
+  (cond
+    (= route-path (rts/home-path))
+    (if logged-in?
+      home-view
+      signup-view)
+    (= route-path (rts/login-path))
+    login-view
+    (= route-path (rts/new-todo-path))
+    new-todo-view
+    (= route-path (rts/view-todo-path))
+    view-todo-view
+    (= route-path (rts/re-login-path))
+    re-login-view
+    :else
+    unknown-route-view
+    ))
+
+;; note this is currently ignoring route params
+(defn get-main-view-state [data]
+  (let [route-path (:path (:route data))
+        curr-view (get-curr-main-view route-path (:username data))]
+    {:path route-path
+     :view (om/build curr-view (dissoc data :route))}))
+
 (defn main-view [data owner]
-  (let [route-path (:path (:route data))]
-    (println "main view got route")
-    (println route-path)
-    (cond
-      (= route-path (rts/home-path))
-        (if (:username data)
-          (home-view data owner)
-          (signup-view data owner))
-      (= route-path (rts/login-path))
-        (login-view data owner)
-      (= route-path (rts/new-todo-path))
-        (new-todo-view data owner)
-      (= route-path (rts/view-todo-path))
-        (view-todo-view data owner)
-      (= route-path (rts/re-login-path))
-        (re-login-view data owner)
-      :else
-        (unknown-route-view data owner)
-        )
-    )
-  )
+  (reify
+      om/IInitState
+    (init-state [_]
+      (get-main-view-state data))
+    om/IWillReceiveProps
+    (will-receive-props [this next-props]
+
+      (println "main view recv props")
+
+      (if (not (= (:path (om/get-render-state owner))
+                  (:path (:route next-props))))
+        (om/set-state! owner (get-main-view-state next-props))))
+
+    om/IWillUpdate
+    (will-update [this next-props next-state]
+
+      (println "main view update")
+
+      ;; (println next-state)
+
+      )
+    om/IRenderState
+    (render-state [this {:keys [path view]}]
+
+      (:view (get-main-view-state data))
+
+      ;; view
+
+      )))
 
 (defn load-main []
   (om/root
