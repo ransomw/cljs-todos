@@ -1,7 +1,7 @@
 (ns todos.core
   (:require
    [todos.routes :as routes]
-   [todos.components :as comp]
+   [todos.components-main :as comp]
    [todos.state :as st]
    [figwheel.client :as figwheel :include-macros true]
    [cljs.core.async :refer [put!]]
