@@ -3,9 +3,10 @@
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
    [todos.dom-helpers :as domh]
+   [todos.state :as st]
    )
   (:use
-   [todos.components.todo-list :only [todo-list-view]]
+   [todos.components.todo-list :only [todo-tree-list-view]]
    ))
 
 (defn all-todos-view [data owner]
@@ -30,14 +31,15 @@
               owner :show-done (not show-done)))
            )
           (om/build
-           todo-list-view
-           (if show-done
-             todos
-             (filter
-              (fn [todo] (not (:done todo)))
-              todos))
+           todo-tree-list-view
+           (vec (st/todo-list-to-tree
+                 (filter
+                  (if show-done
+                    (fn [todo] true)
+                    (fn [todo] (not (:done todo))))
+                  todos))))
            )
           )
          )
         ))
-    ))
+    )

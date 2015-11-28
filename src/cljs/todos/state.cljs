@@ -1,6 +1,7 @@
 (ns todos.state
   (:require
    [clojure.string :as str]
+   [todos.util :as util]
   ))
 
 (def store-types
@@ -72,6 +73,14 @@
 (defn update-state []
   (update-todos))
 
+(defn todo-has-children? [some-todo other-todos]
+  (not (= 0 (count
+             (filter (fn [some-other-todo]
+                       (= (:id some-todo)
+                          (:parent-id some-other-todo)))
+                     other-todos)))))
+
+
 ;; todo: this... could be cleaner, faster, but
 ;;   it's correct, so test and profile first
 (defn todo-list-to-tree [todos]
@@ -96,5 +105,15 @@
                    todos-w-parent)))))
          todos-no-parent)))
 
-(defn has-sub-todos [todo]
-  (not (= 0 (count (:sub-todos todo)))))
+(defn has-sub-todos [todos-tree]
+  (let [sub-todos (:sub-todos todos-tree)]
+    (if sub-todos
+      (not (= 0 (count sub-todos))))))
+
+(defn sort-by-due-date [todos]
+  (sort (fn [todoA todoB]
+          (let [dateA (:date todoA)
+                dateB (:date todoB)]
+            (util/date-str-leq dateA dateB)
+          ))
+        todos))

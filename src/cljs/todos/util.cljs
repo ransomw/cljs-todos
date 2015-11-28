@@ -5,7 +5,6 @@
    [cljs-time.coerce :as tc]
    [cljs-time.extend]
    )
-  ;; (:import [goog.date DateTime])
   )
 
 (def date-input-formatter (tf/formatters :year-month-day))
@@ -19,6 +18,14 @@
     (catch :default e
       false))
   )
+
+(defn date-str-leq [date-str-lt date-str-gt]
+  (let [parse-date
+        (fn [date-str]
+          (tc/to-local-date (tf/parse date-input-formatter date-str)))
+        date-lt (parse-date date-str-lt)
+        date-gt (parse-date date-str-gt)]
+    (t/before? date-lt date-gt)))
 
 (defn date-display-str [date-str]
 

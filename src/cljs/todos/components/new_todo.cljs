@@ -8,7 +8,7 @@
    [todos.util :as util]
    )
   (:use
-   [todos.components.todo-list :only [todo-list-view]]
+   [todos.components.todo-list :only [todo-tree-list-view]]
    ))
 
 (defn new-todo [owner & {:keys [parent-id]}]
@@ -47,7 +47,7 @@
             (fn [todo]
               (om/set-state! owner :parent-todo todo))]
         ((domh/center-div :out-cols "two" :in-cols "eight")
-         (dom/h3 nil "New todo")
+         (dom/h3 nil "new todo")
          (domh/input "Todo" "text" "title")
          (domh/input "Due" "date" "date")
          (dom/div
@@ -66,14 +66,16 @@
                              :justifyContent "space-between"
                              }})
            (dom/span nil (if parent-todo
-                           (:title parent-todo) "No parent selected"))
+                           (:title parent-todo) "no parent selected"))
            (dom/button
             (clj->js {:style {:marginBottom "0"}
                       :onClick #(om/set-state! owner :parent-todo nil)})
             "Clear"))
           (om/build
-           todo-list-view
-           (:todos data)
+           todo-tree-list-view
+           (vec (st/todo-list-to-tree
+                 (filter (fn [todo] (not (:done todo)))
+                         (:todos data))))
            {:opts {:on-todo-sel on-todo-sel}})
           )
          (dom/button

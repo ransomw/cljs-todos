@@ -83,7 +83,8 @@
     om/IRenderState
     (render-state [this {:keys [editing]}]
       (let [id (:id (:route-params data))
-            todo (first (filter #(= id (:id %)) (:todos data)))]
+            all-todos (:todos data)
+            todo (first (filter #(= id (:id %)) all-todos))]
         (dom/div
          nil
          (view-todo-attr
@@ -106,7 +107,7 @@
              (js/hoodie.store.update
               (:todo st/store-types)
               (:id todo)
-              (clj->js (not (:soon todo))))))
+              (clj->js {:soon (not (:soon todo))}))))
           )
          (view-todo-attr
           owner todo "date" :date editing :date
@@ -117,14 +118,15 @@
          (dom/button
           #js {:onClick
                (fn []
-                 (if (js/confirm "delete todo?")
-                   (do
-                     (rts/navigate-to (rts/home-path))
-                     ;; todo: handle delete with child todos
-                     (js/hoodie.store.remove
-                      (:todo st/store-types)
-                      (:id todo))
-                     )))}
+                 (if (st/todo-has-children? todo all-todos)
+                   (js/alert "cannot delete: has dependent todos")
+                   (if (js/confirm "delete todo?")
+                     (do
+                       (rts/navigate-to (rts/home-path))
+                       (js/hoodie.store.remove
+                        (:todo st/store-types)
+                        (:id todo))
+                       ))))}
           "Delete"
           )
          )
