@@ -19,20 +19,16 @@
         ((domh/center-div :out-cols "two" :in-cols "eight")
          (dom/div
           nil
-          (dom/span
-           #js {:style #js {:display "flex"
-                            :alignItems "center"
+          (dom/div
+           #js {:style #js {:marginBottom "2em"
+                            :display "flex"
                             :justifyContent "center"
-                            :marginBottom "2em"
                             }}
-           (dom/span
-            #js {:style #js {:marginRight "1em"}}
-            "show completed")
-           (domh/checkbox show-done
-                          #(om/set-state!
-                            owner :show-done (not show-done)))
+           (domh/labeled-checkbox
+            "show completed" show-done
+            #(om/set-state!
+              owner :show-done (not show-done)))
            )
-
           (om/build
            todo-list-view
            (if show-done

@@ -54,3 +54,13 @@
                      }
              :onClick on-click
              })))
+
+(defn labeled-checkbox [label checked on-click]
+  (dom/span
+   #js {:style #js {:display "flex"
+                    :alignItems "center"
+                    }}
+   (dom/span
+    #js {:style #js {:marginRight "1em"}}
+    label)
+   (checkbox checked on-click)))

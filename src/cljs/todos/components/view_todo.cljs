@@ -2,6 +2,7 @@
   (:require
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
+   [todos.dom-helpers :as domh]
    [todos.state :as st]
    [todos.routes :as rts]
    ))
@@ -91,11 +92,21 @@
          (dom/div
           nil
           (dom/h5
-           nil
+           #js {:style #js {:marginBottom ".25em"}}
            (dom/span nil "Status: ")
            (dom/span nil
                      (if (:done todo) "finished" "unfinished"))
            )
+          )
+         (dom/div
+          #js {:style #js {:marginBottom "1.5em"}}
+          (domh/labeled-checkbox
+           "finish soon" (:soon todo)
+           (fn []
+             (js/hoodie.store.update
+              (:todo st/store-types)
+              (:id todo)
+              (clj->js (not (:soon todo))))))
           )
          (view-todo-attr
           owner todo "date" :date editing :date
