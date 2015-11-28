@@ -14,7 +14,6 @@
    [todos.components.signup :only [signup-view]]
    [todos.components.login :only [login-view]]
    [todos.components.re-login :only [re-login-view]]
-   [todos.components.todo-list :only [make-todo-list-view]]
    [todos.components.home :only [home-view]]
    [todos.components.new-todo :only [new-todo-view]]
    [todos.components.view-todo :only [view-todo-view]]
@@ -87,9 +86,9 @@
       ;;             {:state (om/get-state owner)}))
 
 
-      ;; (:view (get-main-view-state data))
+      (:view (get-main-view-state data))
 
-      (dom/div nil view)
+      ;; (dom/div nil view)
 
       )))
 

@@ -8,7 +8,7 @@
    [todos.util :as util]
    )
   (:use
-   [todos.components.todo-list :only [make-todo-list-view]]
+   [todos.components.todo-list :only [todo-list-view]]
    ))
 
 (defn new-todo [owner & {:keys [parent-id]}]
@@ -32,8 +32,8 @@
                  (println "error adding todo")
                  (js/console.log err)
                  (js/alert "error adding todo")))
-    )
-  ))
+        )
+    ))
 
 (defn new-todo-view [data owner]
   (reify
@@ -41,42 +41,44 @@
     (init-state [_]
       {:parent-todo nil}
       )
-      om/IRenderState
+    om/IRenderState
     (render-state [this {:keys [parent-todo]}]
-      ((domh/center-div :out-cols "two" :in-cols "eight")
-       (dom/h3 nil "New todo")
-       (domh/input "Todo" "text" "title")
-       (domh/input "Due" "date" "date")
-       (dom/div
-        nil
-        (dom/label nil "Description")
-        (dom/textarea
-         #js {:ref "description"}))
-       (dom/div
-        nil
-        (dom/label nil "Select parent todo")
-        (dom/div
-         (clj->js {:style {:width "100%"
-                           :marginBottom "2em"
-                           :display "flex"
-                           :alignItems "center"
-                           :justifyContent "space-between"
-                           }})
-         (dom/span nil (if parent-todo
-                         (:title parent-todo) "No parent selected"))
+      (let [on-todo-sel
+            (fn [todo]
+              (om/set-state! owner :parent-todo todo))]
+        ((domh/center-div :out-cols "two" :in-cols "eight")
+         (dom/h3 nil "New todo")
+         (domh/input "Todo" "text" "title")
+         (domh/input "Due" "date" "date")
+         (dom/div
+          nil
+          (dom/label nil "Description")
+          (dom/textarea
+           #js {:ref "description"}))
+         (dom/div
+          nil
+          (dom/label nil "Select parent todo")
+          (dom/div
+           (clj->js {:style {:width "100%"
+                             :marginBottom "2em"
+                             :display "flex"
+                             :alignItems "center"
+                             :justifyContent "space-between"
+                             }})
+           (dom/span nil (if parent-todo
+                           (:title parent-todo) "No parent selected"))
+           (dom/button
+            (clj->js {:style {:marginBottom "0"}
+                      :onClick #(om/set-state! owner :parent-todo nil)})
+            "Clear"))
+          (om/build
+           todo-list-view
+           (:todos data)
+           {:opts {:on-todo-sel on-todo-sel}})
+          )
          (dom/button
-          (clj->js {:style {:marginBottom "0"}
-                    :onClick #(om/set-state! owner :parent-todo nil)})
-          "Clear"))
-        (om/build
-         (make-todo-list-view
-          :on-todo-sel (fn [todo]
-                         (om/set-state! owner :parent-todo todo)))
-         (:todos data))
-        )
-       (dom/button
-        #js {:onClick (fn []
-                        (new-todo owner :parent-id (:id parent-todo)))
-             } "Add")
-       )
-      )))
+          #js {:onClick (fn []
+                          (new-todo owner :parent-id (:id parent-todo)))
+               } "Add")
+         )
+        ))))
