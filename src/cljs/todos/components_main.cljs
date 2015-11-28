@@ -1,13 +1,9 @@
 (ns todos.components-main
   (:require
-   [clojure.string :as str]
    [om.core :as om :include-macros true]
    [om.dom :as dom :include-macros true]
-   [todos.dom-helpers :as domh]
-   [todos.component-helpers :as comh]
    [todos.state :as st]
    [todos.routes :as rts]
-   [todos.util :as util]
    )
   (:use
    [todos.components.nav :only [nav-view]]
@@ -17,6 +13,7 @@
    [todos.components.home :only [home-view]]
    [todos.components.new-todo :only [new-todo-view]]
    [todos.components.view-todo :only [view-todo-view]]
+   [todos.components.all-todos :only [all-todos-view]]
    ))
 
 
@@ -37,6 +34,8 @@
     login-view
     (= route-path (rts/new-todo-path))
     new-todo-view
+    (= route-path (rts/all-todos-path))
+    all-todos-view
     (= route-path (rts/view-todo-path))
     view-todo-view
     (= route-path (rts/re-login-path))

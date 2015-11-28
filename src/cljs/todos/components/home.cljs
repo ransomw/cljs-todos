@@ -1,6 +1,7 @@
 (ns todos.components.home
   (:require
    [om.core :as om :include-macros true]
+   [om.dom :as dom :include-macros true]
    [todos.dom-helpers :as domh]
    )
   (:use
@@ -13,6 +14,6 @@
       om/IRender
     (render [this]
       ((domh/center-div :out-cols "two" :in-cols "eight")
-       (om/build todo-list-view (:todos data))
+       (dom/h1 nil "home")
        )
       )))
