@@ -15,30 +15,17 @@
       {:editing nil})
     om/IWillUpdate
     (will-update [this next-props next-state]
-
-      (println "view todo view update")
-
       (let [editing (:editing next-props)
             allowed-editing [:title :done :date :description]]
         (if editing
-          (assert (some #{editing} allowed-editing)))
-        ))
+          (assert (some #{editing} allowed-editing)))))
     om/IWillUnmount
     (will-unmount [this]
-      ;; todo: unmount callback not getting called on navigation
-      ;; perhaps necessary to om/build components in main-view?
-      (println "view todo view unmount")
-      (om/set-state! owner :editing nil)
-      )
+      (om/set-state! owner :editing nil))
     om/IRenderState
     (render-state [this {:keys [editing]}]
       (let [id (:id (:route-params data))
             todo (first (filter #(= id (:id %)) (:todos data)))]
-
-        (println "view-todo render")
-        (println (:todos data))
-        (println id)
-
         (dom/div
          nil
          (comh/view-todo-attr

@@ -45,58 +45,17 @@
     unknown-route-view
     ))
 
-(defn get-main-view-state [data]
-  (let [route-path (:path (:route data))
-        curr-view (get-curr-main-view route-path (:username data))]
-    {:path route-path
-     :view (om/build* curr-view
-                      (assoc
-                       (dissoc data :route)
-                       :route-params (:params (:route data)))
-                      )}))
-
-
-
-
 (defn main-view [data owner]
   (reify
-      om/IInitState
-    (init-state [_]
-      (get-main-view-state data))
-    om/IWillReceiveProps
-    (will-receive-props [this next-props]
-
-      ;; (println "main view recv props")
-
-      (if (not (= (:path (om/get-render-state owner))
-                  (:path (:route next-props))))
-        (om/set-state! owner (get-main-view-state next-props))))
-
-    ;; om/IWillUpdate
-    ;; (will-update [this next-props next-state]
-
-    ;;   (println "main view update")
-
-    ;;   ;; (println next-state)
-
-    ;;   )
-
-    om/IRenderState
-    (render-state [this {:keys [path view]}]
-
-      ;; (println "main view render state")
-
-      ;; (let [route-path (:path (:route data))
-      ;;       curr-view (get-curr-main-view route-path (:username data))]
-      ;;   (om/build curr-view (dissoc data :route)
-      ;;             {:state (om/get-state owner)}))
-
-
-      (:view (get-main-view-state data))
-
-      ;; (dom/div nil view)
-
-      )))
+      om/IRender
+    (render [this]
+      (let [route-path (:path (:route data))
+            curr-view (get-curr-main-view route-path (:username data))
+            view-params
+            (assoc
+             (dissoc data :route)
+             :route-params (:params (:route data)))]
+        (om/build* curr-view view-params)))))
 
 (defn load []
   (om/root

@@ -49,9 +49,6 @@
      )
     (let [edit-onclick
           (fn []
-
-            (println "edit on click")
-
             (om/set-state! owner :editing editing-key)
             )]
       (dom/div
