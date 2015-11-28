@@ -32,8 +32,13 @@
       )
     om/IRenderState
     (render-state [this {:keys [editing]}]
-      (let [id (:id (:params (:route data)))
+      (let [id (:id (:route-params data))
             todo (first (filter #(= id (:id %)) (:todos data)))]
+
+        (println "view-todo render")
+        (println (:todos data))
+        (println id)
+
         (dom/div
          nil
          (comh/view-todo-attr

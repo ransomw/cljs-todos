@@ -45,12 +45,18 @@
     unknown-route-view
     ))
 
-;; note this is currently ignoring route params
 (defn get-main-view-state [data]
   (let [route-path (:path (:route data))
         curr-view (get-curr-main-view route-path (:username data))]
     {:path route-path
-     :view (om/build* curr-view (dissoc data :route))}))
+     :view (om/build* curr-view
+                      (assoc
+                       (dissoc data :route)
+                       :route-params (:params (:route data)))
+                      )}))
+
+
+
 
 (defn main-view [data owner]
   (reify
