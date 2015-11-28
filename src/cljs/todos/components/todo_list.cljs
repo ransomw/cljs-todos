@@ -38,7 +38,8 @@
    ))
 
 (defn todo-item-list-view
-  [todo owner {:keys [on-todo-sel] :as opts}]
+  [{:keys [todo on-todo-sel]} owner]
+  ;; [todo owner {:keys [on-todo-sel] :as opts}]
   (reify
       om/IRender
     (render [this]
@@ -48,15 +49,28 @@
        ))))
 
 (defn todo-list-view
-  [todos-tree owner {:keys [on-todo-sel] :as opts}]
+  [{:keys [todos-list on-todo-sel]} owner]
+  ;; [todos-list owner {:keys [on-todo-sel] :as opts}]
   (reify
     om/IRender
     (render [this]
+
+      ;; (println "todo-list-view render")
+      ;; (println todos-list)
+      ;; (println (first todos-list))
+
       (apply dom/ul
              #js {:style #js{:listStyle "none"}}
              (om/build-all
-              todo-item-list-view todos-tree
-              {:opts {:on-todo-sel on-todo-sel}}))
+              todo-item-list-view
+              (map (fn [todo]
+                     {:todo todo
+                      :on-todo-sel on-todo-sel})
+                   todos-list)
+
+              ;; {:opts {:on-todo-sel on-todo-sel}}
+
+              ))
       )))
 
 

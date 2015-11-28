@@ -73,7 +73,7 @@
                                    )
                                  priority-todos)))}
               "clear"))
-            (om/build todo-list-view priority-todos))
+            (om/build todo-list-view {:todos-list priority-todos}))
            (dom/div
             nil
             (dom/div
@@ -94,38 +94,47 @@
                                    new-soon-todos)))}
                 "save")))
             (om/build
-             todo-list-view new-soon-todos
-             {:opts {:on-todo-sel
-                     (fn [todo]
-                       (let [prev-soon-todos
-                             (om/get-state owner :new-soon-todos)
-                             updated-soon-todos
-                             (filter (fn [other-todo]
-                                       (not (= (:id todo)
-                                               (:id other-todo)))
-                                       )
-                                     prev-soon-todos)]
-                         (assert (= (- (count prev-soon-todos) 1)
-                                    (count updated-soon-todos)))
-                         (om/set-state!
-                          owner :new-soon-todos updated-soon-todos)
-                              ))}}))
-         )
-        (dom/div
-         nil
+             todo-list-view
+             {:todos-list new-soon-todos
+              :on-todo-sel
+              (fn [todo]
+                (let [prev-soon-todos
+                      (om/get-state owner :new-soon-todos)
+                      updated-soon-todos
+                      (filter (fn [other-todo]
+                                (not (= (:id todo)
+                                        (:id other-todo)))
+                                )
+                              prev-soon-todos)]
+                  (assert (= (- (count prev-soon-todos) 1)
+                             (count updated-soon-todos)))
+                  (om/set-state!
+                   owner :new-soon-todos updated-soon-todos)
+                  ))
+              })
+            ))
          (dom/div
-          #js {:style header-div-style}
-          (dom/h4 #js {:style #js {:marginBottom "0"}} "due soon"))
-         ;; todo: bug: set priority, save, and others don't update
-         ;;   i.e., opts don't propegate to all todo-item-list-view s,
-         ;;         only to those newly flagged as priorities
-         ;; clicking around in the navigation clears this up
-         ;; to fix, try a forced re-render (re-build?) on "save" click
-         (om/build todo-list-view due-todos
-                   {:opts {:on-todo-sel
-                           (if (= 0 (count priority-todos))
-                             add-new-soon-todo)}}
-                   ))
+          nil
+          (dom/div
+           #js {:style header-div-style}
+           (dom/h4 #js {:style #js {:marginBottom "0"}} "due soon"))
+          ;; todo: don't display under both "soon" and "priority"
+          (om/build todo-list-view
+                    {:todos-list
+                     (filter
+                      (fn [due-todo]
+                        true
+                        ;; (reduce
+                        ;;  (fn [a b] (or a b))
+                        ;;  (map (fn [priority-todo]
+                        ;;        (not (= (:id due-todo)
+                        ;;                (:id priority-todo))))
+                        ;;       priority-todos))
+                        )
+                      due-todos)
+                     :on-todo-sel
+                     (if (= 0 (count priority-todos))
+                       add-new-soon-todo)}))
          (if (= 0 (count priority-todos))
            (dom/div
             nil
