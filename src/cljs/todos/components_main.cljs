@@ -66,7 +66,7 @@
     om/IWillReceiveProps
     (will-receive-props [this next-props]
 
-      (println "main view recv props")
+      ;; (println "main view recv props")
 
       (if (not (= (:path (om/get-render-state owner))
                   (:path (:route next-props))))
@@ -84,7 +84,7 @@
     om/IRenderState
     (render-state [this {:keys [path view]}]
 
-      (println "main view render state")
+      ;; (println "main view render state")
 
       ;; (let [route-path (:path (:route data))
       ;;       curr-view (get-curr-main-view route-path (:username data))]

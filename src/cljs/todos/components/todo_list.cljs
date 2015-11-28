@@ -13,33 +13,9 @@
   (reify
       om/IInitState
     (init-state [_]
-      (let [hidden false
-            expand true]
-        {:expand expand
-         :sub-comps
-         (om/build-all
-          todo-item-view
-          (:sub-todos todo)
-          {:state {:hidden (or hidden (not expand))}
-           :opts {:on-todo-sel on-todo-sel}})
-         }))
-    om/IWillUpdate
-    (will-update [this next-props next-state]
-      (let [hide-sub-comps? (or (not (:expand next-state))
-                                (:hidden next-state))]
-
-        (println "todo item view update")
-
-        (doall
-         (map
-          (fn [sub-comp]
-            (let [sub-comp-owner
-                  (.. sub-comp -props -children -owner)]
-              (om/set-state! sub-comp-owner :hidden hide-sub-comps?)
-              ))
-          (:sub-comps next-state)))))
+      {:expand true})
     om/IRenderState
-    (render-state [this {:keys [expand hidden sub-comps]}]
+    (render-state [this {:keys [expand hidden]}]
       (dom/li
        #js {:hidden hidden}
        (dom/div
@@ -53,18 +29,6 @@
         (dom/span
          #js {:onClick
               (fn []
-
-                (println "toggle expand click")
-                (js/console.log owner)
-                ;; (println (om/get-state owner))
-                (js/console.log (.. owner
-                                    -_reactInternalInstance
-                                    -_context))
-                (js/console.log (.. owner
-                                    -state
-                                    -__om_pending_state))
-
-
                 (om/set-state! owner :expand (not expand)))
               :style #js {:height "100%"}}
          (if expand "\u00a0\\/\u00a0" "\u00a0>\u00a0"))
@@ -80,7 +44,6 @@
            "X")
           (domh/checkbox (:done todo)
                          (fn [e]
-                           ;; (.preventDefault e)
                            (js/hoodie.store.update
                             (:todo st/store-types)
                             (:id todo)
@@ -89,7 +52,11 @@
        (if (st/has-sub-todos todo)
          (apply dom/ul
                 (clj->js {:style {:listStyle "none"}})
-                sub-comps
+                (om/build-all
+                 todo-item-view
+                 (:sub-todos todo)
+                 {:state {:hidden (or hidden (not expand))}
+                  :opts {:on-todo-sel on-todo-sel}})
                 ))
        )
       )))
@@ -98,9 +65,6 @@
   (reify
       om/IRender
     (render [this]
-
-      (println "todo-list-view render")
-
       (apply dom/ul
              (clj->js {:style {:listStyle "none"}})
              (om/build-all
