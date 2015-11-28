@@ -8,10 +8,8 @@
 
 
 (defn nav-view [data owner]
-  ;; todo: this let binding is probably why the reload after signup
-  ;;       bug occurs
-  (let [username (:username data)]
-    (om/component
+  (om/component
+   (let [username (:username data)]
      (dom/div
       nil
       (dom/div

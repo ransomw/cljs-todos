@@ -41,7 +41,7 @@
     om/IRenderState
     (render-state [this {:keys [expand hidden sub-comps]}]
       (dom/li
-       (clj->js {:hidden hidden})
+       #js {:hidden hidden}
        (dom/div
         (clj->js {:style {:width "100%"
                           :borderBottom "solid #aaa .1em"
@@ -79,10 +79,12 @@
                      :onClick #(on-todo-sel todo)})
            "X")
           (domh/checkbox (:done todo)
-                         #(js/hoodie.store.update
-                           (:todo st/store-types)
-                           (:id todo)
-                           #js {:done (not (:done todo))})))
+                         (fn [e]
+                           ;; (.preventDefault e)
+                           (js/hoodie.store.update
+                            (:todo st/store-types)
+                            (:id todo)
+                            #js {:done (not (:done todo))}))))
         )
        (if (st/has-sub-todos todo)
          (apply dom/ul
@@ -96,6 +98,9 @@
   (reify
       om/IRender
     (render [this]
+
+      (println "todo-list-view render")
+
       (apply dom/ul
              (clj->js {:style {:listStyle "none"}})
              (om/build-all
