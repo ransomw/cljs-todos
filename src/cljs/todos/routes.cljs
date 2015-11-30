@@ -15,6 +15,7 @@
          login-path
          new-todo-path
          all-todos-path
+         config-path
          view-todo-path
          re-login-path)
 
@@ -37,6 +38,11 @@
 (defroute all-todos-path "/todos" []
   (println "all-todos-path")
   (st/set-route (all-todos-path) {})
+  )
+
+(defroute config-path "/config" []
+  (println "config-path")
+  (st/set-route (config-path) {})
   )
 
 (defroute view-todo-path "/todos/:id" [id]

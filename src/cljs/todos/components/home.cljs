@@ -11,7 +11,6 @@
    )
   )
 
-
 (defn home-view [data owner]
   (reify
       om/IInitState
@@ -23,6 +22,7 @@
       )
     om/IRenderState
     (render-state [this {:keys [new-soon-todos]}]
+      ;; todo: homepage render fn too long.  seperate into smaller fns
       (let [header-div-style
             #js {
                  :marginBottom "1.5em"
@@ -76,23 +76,26 @@
             (om/build todo-list-view {:todos-list priority-todos}))
            (dom/div
             nil
-            (dom/div
-             #js {:style header-div-style}
-             (dom/h3 #js {:style #js {:marginBottom "0"}}
-                     (if (= 0 (count new-soon-todos))
-                       "set priority" "priority todos"))
-             (if (not (= 0 (count new-soon-todos)))
-               (dom/button
-                #js {:onClick
-                     (fn []
-                       (doall (map (fn [todo]
-                                     (js/hoodie.store.update
-                                      (:todo st/store-types)
-                                      (:id todo)
-                                      (clj->js {:soon true}))
-                                     )
-                                   new-soon-todos)))}
-                "save")))
+            (let [are-new-soon-todos? (not (= 0 (count new-soon-todos)))]
+              (dom/div
+               #js {:style header-div-style}
+               (dom/h3
+                (clj->js {:style
+                          {:marginBottom "0"}})
+                       (if are-new-soon-todos?
+                         "priority todos" "set priority"))
+               (if are-new-soon-todos?
+                 (dom/button
+                  #js {:onClick
+                       (fn []
+                         (doall (map (fn [todo]
+                                       (js/hoodie.store.update
+                                        (:todo st/store-types)
+                                        (:id todo)
+                                        (clj->js {:soon true}))
+                                       )
+                                     new-soon-todos)))}
+                  "save"))))
             (om/build
              todo-list-view
              {:todos-list new-soon-todos
@@ -118,9 +121,10 @@
           (dom/div
            #js {:style header-div-style}
            (dom/h4 #js {:style #js {:marginBottom "0"}} "due soon"))
-          ;; todo: don't display under both "soon" and "priority"
           (om/build todo-list-view
                     {:todos-list
+                     ;; don't display under both "soon" and "priority",
+                     ;; already, two items can't be added to priority
                      (filter
                       (fn [due-todo]
                         true
@@ -143,8 +147,10 @@
              (dom/h4 #js {:style #js {:marginBottom "0"}} "all todos"))
             (om/build
              todo-tree-list-view
-             (vec (st/todo-list-to-tree
-                   (filter (fn [todo] (not (:done todo))) all-todos)))
+             {:todos-trees
+              (vec (st/todo-list-to-tree
+                    (filter (fn [todo] (not (:done todo))) all-todos)))
+              :expand-depth (:expand-depth (:config data))}
              {:opts {:on-todo-sel add-new-soon-todo}}
              )
             ))

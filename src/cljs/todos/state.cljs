@@ -5,7 +5,8 @@
   ))
 
 (def store-types
-  {:todo "todo"})
+  {:todo "todo"
+   :config "config"})
 
 (defonce app-state
   (atom
@@ -14,7 +15,8 @@
      :params {}}
     :username js/hoodie.account.username
     :todos []
-    :mstr "Hi there!"}))
+    :config {:expand-depth 2
+             :soon-days 7}}))
 
 (defn update-atom-dict [atom-dict key val]
   (swap!
@@ -41,8 +43,6 @@
 (js/hoodie.account.on
  "signout"
  #(update-atom-dict app-state :username js/hoodie.account.username))
-
-(def my-todos nil)
 
 ;; todo: use transit instead of js->clj
 (defn update-todos []

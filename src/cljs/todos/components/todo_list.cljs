@@ -39,7 +39,6 @@
 
 (defn todo-item-list-view
   [{:keys [todo on-todo-sel]} owner]
-  ;; [todo owner {:keys [on-todo-sel] :as opts}]
   (reify
       om/IRender
     (render [this]
@@ -50,15 +49,9 @@
 
 (defn todo-list-view
   [{:keys [todos-list on-todo-sel]} owner]
-  ;; [todos-list owner {:keys [on-todo-sel] :as opts}]
   (reify
     om/IRender
     (render [this]
-
-      ;; (println "todo-list-view render")
-      ;; (println todos-list)
-      ;; (println (first todos-list))
-
       (apply dom/ul
              #js {:style #js{:listStyle "none"}}
              (om/build-all
@@ -66,11 +59,7 @@
               (map (fn [todo]
                      {:todo todo
                       :on-todo-sel on-todo-sel})
-                   todos-list)
-
-              ;; {:opts {:on-todo-sel on-todo-sel}}
-
-              ))
+                   todos-list)))
       )))
 
 
@@ -78,11 +67,12 @@
 (declare todo-tree-list-view)
 
 (defn todo-item-tree-view
-  [todos-tree owner {:keys [on-todo-sel] :as opts}]
+  [{:keys [todos-tree expand-depth]} owner
+   {:keys [on-todo-sel depth] :as opts}]
   (reify
       om/IInitState
     (init-state [_]
-      {:expand true})
+      {:expand (< depth expand-depth)})
     om/IRenderState
     (render-state [this {:keys [expand]}]
       (dom/li
@@ -90,24 +80,33 @@
        (todo-div
         todos-tree
         :pre-elem
-        (dom/span
+        (dom/a
          #js {:onClick
-              (fn []
+              (fn [e]
+                (.preventDefault e)
                 (om/set-state! owner :expand (not expand)))
-              :style #js {:height "100%"}}
+              :href ""
+              :style #js {:height "100%"
+                          :color "black"}}
          (if expand "\u00a0\\/\u00a0" "\u00a0>\u00a0"))
         :on-todo-sel on-todo-sel)
        (if (st/has-sub-todos todos-tree)
          (om/build
-          todo-tree-list-view (:sub-todos todos-tree)
-          {:opts {:on-todo-sel on-todo-sel}
+          todo-tree-list-view
+          {:todos-trees (:sub-todos todos-tree)
+           :expand-depth expand-depth}
+          {:opts {:on-todo-sel on-todo-sel
+                  :depth (+ 1 depth)}
            :state {:hidden (not expand)}})
          )
        )
       )))
 
-(defn todo-tree-list-view [todos-tree owner
-                           {:keys [on-todo-sel] :as opts}]
+;; todo: possible to set default opts for components?
+;;       (default depth to 0)
+(defn todo-tree-list-view
+  [{:keys [todos-trees expand-depth]} owner
+   {:keys [on-todo-sel depth] :as opts}]
   (reify
       om/IInitState
     (init-state [_]
@@ -118,6 +117,10 @@
              #js {:hidden hidden
                   :style #js{:listStyle "none"}}
              (om/build-all
-              todo-item-tree-view todos-tree
-              {:opts {:on-todo-sel on-todo-sel}}))
+              todo-item-tree-view
+              (map (fn [todos-tree]
+                     {:todos-tree todos-tree :expand-depth expand-depth})
+                   todos-trees)
+              {:opts {:on-todo-sel on-todo-sel
+                      :depth (if depth depth 1)}}))
       )))

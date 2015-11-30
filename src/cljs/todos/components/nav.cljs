@@ -20,6 +20,7 @@
          #js {:className "locations"}
          (domh/li-link (rts/new-todo-path) "new todo")
          (domh/li-link (rts/all-todos-path) "all todos")
+         (domh/li-link (rts/config-path) "config")
          ))
       (dom/ul
        #js {:className "actions"}

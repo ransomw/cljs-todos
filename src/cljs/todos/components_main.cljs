@@ -14,6 +14,7 @@
    [todos.components.new-todo :only [new-todo-view]]
    [todos.components.view-todo :only [view-todo-view]]
    [todos.components.all-todos :only [all-todos-view]]
+   [todos.components.config :only [config-view]]
    ))
 
 
@@ -36,6 +37,8 @@
     new-todo-view
     (= route-path (rts/all-todos-path))
     all-todos-view
+    (= route-path (rts/config-path))
+    config-view
     (= route-path (rts/view-todo-path))
     view-todo-view
     (= route-path (rts/re-login-path))

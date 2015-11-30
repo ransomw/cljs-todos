@@ -73,9 +73,11 @@
             "Clear"))
           (om/build
            todo-tree-list-view
-           (vec (st/todo-list-to-tree
-                 (filter (fn [todo] (not (:done todo)))
-                         (:todos data))))
+           {:todos-trees
+            (vec (st/todo-list-to-tree
+                  (filter (fn [todo] (not (:done todo)))
+                          (:todos data))))
+            :expand-depth (:expand-depth (:config data))}
            {:opts {:on-todo-sel on-todo-sel}})
           )
          (dom/button
