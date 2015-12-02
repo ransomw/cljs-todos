@@ -12,7 +12,7 @@
 
 (defn main []
   (println "Hiya!!!")
-  (st/update-state)
+  (st/init-state)
   (comp/load)
   )
 

@@ -70,7 +70,56 @@
  (str/join [(:todo store-types) ":remove"])
  update-todos)
 
-(defn update-state []
+(def id-config "aaaaaaa")
+
+(defn update-config []
+  (-> js/hoodie.store
+      (.find (:config store-types) id-config)
+      (.done
+       (fn [config]
+         (println "updating config")
+         (update-atom-dict
+          app-state :config
+          (js->clj config :keywordize-keys true))))
+      (.fail (fn [err]
+               (println "error updating config")
+               (println err)
+               (js/alert "error updating config")
+               ))
+   ))
+
+(defn init-config []
+  (-> js/hoodie.store
+      (.findOrAdd
+       (:config store-types)
+       id-config
+       #js {:expand-depth 2
+            :soon-days 7})
+      (.done (fn [config]
+               (println "initialized config")
+               (update-config)))
+      (.fail (fn [err]
+               (assert false
+                       (str/join ["error initializing config: "
+                                  (.toString err)]))))
+      ))
+
+;; (js/hoodie.store.on
+;;  (str/join [(:config store-types) ":add"])
+;;  )
+
+(js/hoodie.store.on
+ (str/join [(:config store-types) ":update"])
+ update-config
+ )
+
+(js/hoodie.store.on
+ (str/join [(:config store-types) ":remove"])
+ #(assert false))
+
+
+(defn init-state []
+  (init-config)
   (update-todos))
 
 (defn todo-has-children? [some-todo other-todos]

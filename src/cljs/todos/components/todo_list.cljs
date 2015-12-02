@@ -72,7 +72,8 @@
   (reify
       om/IInitState
     (init-state [_]
-      {:expand (< depth expand-depth)})
+      {:expand (or (not (st/has-sub-todos todos-tree))
+                   (< depth expand-depth))})
     om/IRenderState
     (render-state [this {:keys [expand]}]
       (dom/li
