@@ -5,21 +5,29 @@
    [todos.dom-helpers :as domh]
    [todos.state :as st]
    [todos.routes :as rts]
+   [todos.util :as util]
    ))
+
+(defn parse-value [value attr]
+  (cond
+    (= attr :date)
+    (if (util/date-str? value) value)
+    :else
+    value))
 
 (defn edit-buttons [owner todo ref attr]
   (dom/div
    nil
    (dom/button
     #js {:onClick (fn []
+                    (let [value (.. (om/get-node owner ref)
+                                    -value)]
                     (om/set-state! owner :editing nil)
                     (js/hoodie.store.update
                      (:todo st/store-types)
                      (:id todo)
                      (clj->js
-                      (hash-map attr
-                                (.. (om/get-node owner ref)
-                                    -value)))))
+                      (hash-map attr (parse-value value attr))))))
          :style #js {:marginRight "1em"}}
     "Update")
    (dom/button
