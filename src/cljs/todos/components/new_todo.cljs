@@ -35,6 +35,34 @@
         )
     ))
 
+(defn select-parent-div [data owner parent-todo on-todo-sel]
+  (dom/div
+   nil
+   (dom/label nil "Select parent todo")
+   (dom/div
+    #js {:style #js {:width "100%"
+                     :marginBottom "2em"
+                     :display "flex"
+                     :alignItems "center"
+                     :justifyContent "space-between"
+                     }}
+    (dom/span nil (if parent-todo
+                    (:title parent-todo) "no parent selected"))
+    (dom/button
+     (clj->js {:style {:marginBottom "0"}
+               :onClick #(om/set-state! owner :parent-todo nil)})
+     "Clear"))
+   (om/build
+    todo-tree-list-view
+    {:todos-trees
+     (vec (st/todo-list-to-tree
+           (filter (fn [todo] (not (:done todo)))
+                   (:todos data))))
+     :expand-depth (:expand-depth (:config data))}
+    {:opts {:on-todo-sel on-todo-sel}})
+   )
+  )
+
 (defn new-todo-view [data owner]
   (reify
       om/IInitState
@@ -55,34 +83,10 @@
           (dom/label nil "Description")
           (dom/textarea
            #js {:ref "description"}))
-         (dom/div
-          nil
-          (dom/label nil "Select parent todo")
-          (dom/div
-           (clj->js {:style {:width "100%"
-                             :marginBottom "2em"
-                             :display "flex"
-                             :alignItems "center"
-                             :justifyContent "space-between"
-                             }})
-           (dom/span nil (if parent-todo
-                           (:title parent-todo) "no parent selected"))
-           (dom/button
-            (clj->js {:style {:marginBottom "0"}
-                      :onClick #(om/set-state! owner :parent-todo nil)})
-            "Clear"))
-          (om/build
-           todo-tree-list-view
-           {:todos-trees
-            (vec (st/todo-list-to-tree
-                  (filter (fn [todo] (not (:done todo)))
-                          (:todos data))))
-            :expand-depth (:expand-depth (:config data))}
-           {:opts {:on-todo-sel on-todo-sel}})
-          )
+         (select-parent-div data owner parent-todo on-todo-sel)
          (dom/button
-          #js {:onClick (fn []
-                          (new-todo owner :parent-id (:id parent-todo)))
+          #js {:onClick
+               #(new-todo owner :parent-id (:id parent-todo))
                } "Add")
          )
         ))))

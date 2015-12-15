@@ -62,8 +62,6 @@
                    todos-list)))
       )))
 
-
-
 (declare todo-tree-list-view)
 
 (defn todo-item-tree-view

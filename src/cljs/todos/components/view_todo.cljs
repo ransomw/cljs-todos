@@ -74,6 +74,58 @@
     )
 )
 
+(defn title-attr [owner todo editing]
+  (view-todo-attr
+   owner todo "title" :title editing :title
+   "Title" dom/input))
+
+(defn status-attr [todo]
+  (dom/div
+   nil
+   (dom/h5
+    #js {:style #js {:marginBottom ".25em"}}
+    (dom/span nil "Status: ")
+    (dom/span nil
+              (if (:done todo) "finished" "unfinished"))
+    )))
+
+(defn soon-attr [todo]
+  (dom/div
+   #js {:style #js {:marginBottom "1.5em"}}
+   (domh/labeled-checkbox
+    "finish soon" (:soon todo)
+    (fn []
+      (js/hoodie.store.update
+       (:todo st/store-types)
+       (:id todo)
+       (clj->js {:soon (not (:soon todo))}))))
+   ))
+
+(defn date-attr [owner todo editing]
+  (view-todo-attr
+   owner todo "date" :date editing :date
+   "Due date" dom/input :input-attrs {:type "date"}))
+
+(defn description-attr [owner todo editing]
+  (view-todo-attr
+   owner todo "description" :description editing :description
+   "Description" dom/textarea))
+
+(defn delete-button [todo all-todos]
+  (dom/button
+   #js {:onClick
+        (fn []
+          (if (st/todo-has-children? todo all-todos)
+            (js/alert "cannot delete: has dependent todos")
+            (if (js/confirm "delete todo?")
+              (do
+                (rts/navigate-to (rts/home-path))
+                (js/hoodie.store.remove
+                 (:todo st/store-types)
+                 (:id todo))
+                ))))}
+   "Delete"))
+
 (defn view-todo-view [data owner]
   (reify
       om/IInitState
@@ -95,47 +147,11 @@
             todo (first (filter #(= id (:id %)) all-todos))]
         (dom/div
          nil
-         (view-todo-attr
-          owner todo "title" :title editing :title
-          "Title" dom/input)
-         (dom/div
-          nil
-          (dom/h5
-           #js {:style #js {:marginBottom ".25em"}}
-           (dom/span nil "Status: ")
-           (dom/span nil
-                     (if (:done todo) "finished" "unfinished"))
-           )
-          )
-         (dom/div
-          #js {:style #js {:marginBottom "1.5em"}}
-          (domh/labeled-checkbox
-           "finish soon" (:soon todo)
-           (fn []
-             (js/hoodie.store.update
-              (:todo st/store-types)
-              (:id todo)
-              (clj->js {:soon (not (:soon todo))}))))
-          )
-         (view-todo-attr
-          owner todo "date" :date editing :date
-          "Due date" dom/input :input-attrs {:type "date"})
-         (view-todo-attr
-          owner todo "description" :description editing :description
-          "Description" dom/textarea)
-         (dom/button
-          #js {:onClick
-               (fn []
-                 (if (st/todo-has-children? todo all-todos)
-                   (js/alert "cannot delete: has dependent todos")
-                   (if (js/confirm "delete todo?")
-                     (do
-                       (rts/navigate-to (rts/home-path))
-                       (js/hoodie.store.remove
-                        (:todo st/store-types)
-                        (:id todo))
-                       ))))}
-          "Delete"
-          )
+         (title-attr owner todo editing)
+         (status-attr todo)
+         (soon-attr todo)
+         (date-attr owner todo editing)
+         (description-attr owner todo editing)
+         (delete-button todo all-todos)
          )
         ))))

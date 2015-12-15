@@ -16,15 +16,5 @@
   (comp/load)
   )
 
-;; (figwheel/watch-and-reload
-;;   :websocket-url "ws://localhost:3449/figwheel-ws"
-;;   :jsload-callback (fn []
-;;                      (main)))
-
-
-;; (when-not (weasel/alive?)
-;;   (weasel/connect
-;;    "ws://localhost:9001" :verbose true :print #{:repl :console}))
-
 (main)
 (routes/start-routing)

@@ -9,6 +9,18 @@
    [todos.components.todo-list :only [todo-tree-list-view]]
    ))
 
+(defn all-todos-list [todos expand-depth show-done]
+  (om/build
+   todo-tree-list-view
+   {:todos-trees
+    (vec (st/todo-list-to-tree
+          (filter
+           (if show-done
+             (fn [todo] true)
+             (fn [todo] (not (:done todo))))
+           todos)))
+    :expand-depth expand-depth}))
+
 (defn all-todos-view [data owner]
   (reify
       om/IInitState
@@ -32,16 +44,6 @@
            #(om/set-state!
              owner :show-done (not show-done)))
           )
-         (om/build
-          todo-tree-list-view
-          {:todos-trees
-           (vec (st/todo-list-to-tree
-                 (filter
-                  (if show-done
-                    (fn [todo] true)
-                    (fn [todo] (not (:done todo))))
-                  todos)))
-           :expand-depth (:expand-depth (:config data))})
+         (all-todos-list todos (:expand-depth (:config data)) show-done)
          )
-
         ))))
