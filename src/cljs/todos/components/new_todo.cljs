@@ -46,20 +46,29 @@
                      :alignItems "center"
                      :justifyContent "space-between"
                      }}
-    (dom/span nil (if parent-todo
-                    (:title parent-todo) "no parent selected"))
-    (dom/button
-     (clj->js {:style {:marginBottom "0"}
-               :onClick #(om/set-state! owner :parent-todo nil)})
-     "Clear"))
-   (om/build
-    todo-tree-list-view
-    {:todos-trees
-     (vec (st/todo-list-to-tree
-           (filter (fn [todo] (not (:done todo)))
-                   (:todos data))))
-     :expand-depth (:expand-depth (:config data))}
-    {:opts {:on-todo-sel on-todo-sel}})
+    (dom/span
+     nil
+     (if parent-todo
+       (or (:title parent-todo) "top-level todo")
+       "no parent selected"))
+    (if parent-todo
+      (dom/button
+       (clj->js {:style {:marginBottom "0"}
+                 :onClick #(om/set-state! owner :parent-todo nil)})
+       "Clear")
+      (dom/button
+       (clj->js {:style {:marginBottom "0"}
+                 :onClick #(om/set-state! owner :parent-todo {})})
+       "top-level")))
+   (if (not parent-todo)
+     (om/build
+      todo-tree-list-view
+      {:todos-trees
+       (vec (st/todo-list-to-tree
+             (filter (fn [todo] (not (:done todo)))
+                     (:todos data))))
+       :expand-depth (:expand-depth (:config data))}
+      {:opts {:on-todo-sel on-todo-sel}}))
    )
   )
 
