@@ -8,7 +8,8 @@
    [todos.util :as util]
    )
   (:use
-   [todos.components.todo-list :only [todo-tree-list-view]]
+   [todos.components.todo-list :only [todo-list-view
+                                      todo-tree-list-view]]
    ))
 
 (defn parse-value [value attr]
@@ -171,19 +172,31 @@
   (view-todo-attr
    todo :description "Description" dom/textarea))
 
+(defn div-parent-todo [todo]
+  (dom/div
+   #js {:style #js {:marginBottom "1.5rem"}}
+   (dom/h5
+    #js {:style #js {:marginBottom "1rem"}}
+    "parent todo")
+   (if todo
+     ((domh/center-div :out-cols "two" :in-cols "eight")
+      (om/build todo-list-view {:todos-list (list todo)}))
+     (dom/span nil "none"))
+   ))
+
 (defn div-sub-todos [sub-todos-trees]
   (dom/div
     #js {:style #js {:marginBottom "3rem"}}
    (dom/h5
-    ;; nil
     #js {:style #js {:marginBottom "1rem"}}
            "sub todos")
    (if (not (= 0 (count sub-todos-trees)))
-     (om/build
-      todo-tree-list-view
-      {:todos-trees
-       (vec sub-todos-trees)
-       :expand-depth 1})
+     ((domh/center-div :out-cols "two" :in-cols "eight")
+      (om/build
+       todo-tree-list-view
+       {:todos-trees
+        (vec sub-todos-trees)
+        :expand-depth 1}))
      (dom/span nil "none"))
    ))
 
@@ -206,10 +219,10 @@
   (reify
     om/IRender
     (render [this]
-      (let [id (:id (:route-params data))
-            all-todos (:todos data)
-            todo (first (filter #(= id (:id %)) all-todos))
-            sub-todos-trees (st/get-sub-todos-tree all-todos todo)]
+      (let [all-todos (:todos data)
+            todo (first (filter
+                         #(= (:id (:route-params data)) (:id %))
+                         all-todos))]
         (dom/div
          nil
          (title-attr owner todo)
@@ -217,7 +230,9 @@
          (soon-attr todo)
          (date-attr owner todo)
          (description-attr owner todo)
-         (div-sub-todos sub-todos-trees)
+         (div-parent-todo (first (filter #(= (:parent-id todo) (:id %))
+                                         all-todos)))
+         (div-sub-todos (st/get-sub-todos-tree all-todos todo))
          (delete-button todo all-todos)
          )
         ))))
