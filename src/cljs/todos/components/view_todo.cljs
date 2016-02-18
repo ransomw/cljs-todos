@@ -6,6 +6,9 @@
    [todos.state :as st]
    [todos.routes :as rts]
    [todos.util :as util]
+   )
+  (:use
+   [todos.components.todo-list :only [todo-tree-list-view]]
    ))
 
 (defn parse-value [value attr]
@@ -168,6 +171,22 @@
   (view-todo-attr
    todo :description "Description" dom/textarea))
 
+(defn div-sub-todos [sub-todos-trees]
+  (dom/div
+    #js {:style #js {:marginBottom "3rem"}}
+   (dom/h5
+    ;; nil
+    #js {:style #js {:marginBottom "1rem"}}
+           "sub todos")
+   (if (not (= 0 (count sub-todos-trees)))
+     (om/build
+      todo-tree-list-view
+      {:todos-trees
+       (vec sub-todos-trees)
+       :expand-depth 1})
+     (dom/span nil "none"))
+   ))
+
 (defn delete-button [todo all-todos]
   (dom/button
    #js {:onClick
@@ -189,7 +208,8 @@
     (render [this]
       (let [id (:id (:route-params data))
             all-todos (:todos data)
-            todo (first (filter #(= id (:id %)) all-todos))]
+            todo (first (filter #(= id (:id %)) all-todos))
+            sub-todos-trees (st/get-sub-todos-tree all-todos todo)]
         (dom/div
          nil
          (title-attr owner todo)
@@ -197,6 +217,7 @@
          (soon-attr todo)
          (date-attr owner todo)
          (description-attr owner todo)
+         (div-sub-todos sub-todos-trees)
          (delete-button todo all-todos)
          )
         ))))

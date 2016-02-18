@@ -104,10 +104,6 @@
                                   (.toString err)]))))
       ))
 
-;; (js/hoodie.store.on
-;;  (str/join [(:config store-types) ":add"])
-;;  )
-
 (js/hoodie.store.on
  (str/join [(:config store-types) ":update"])
  update-config
@@ -128,7 +124,6 @@
                        (= (:id some-todo)
                           (:parent-id some-other-todo)))
                      other-todos)))))
-
 
 ;; todo: this... could be cleaner, faster, but
 ;;   it's correct, so test and profile first
@@ -166,3 +161,22 @@
             (util/date-str-leq dateA dateB)
           ))
         todos))
+
+;; helper fn
+(defn h-get-sub-todos-tree [todos-trees todo]
+  (let [todo-tree-node
+        (first (filter (fn [tree-node] (= (:id tree-node) (:id todo)))
+                       todos-trees))]
+    (if todo-tree-node
+      (:sub-todos todo-tree-node)
+      (first
+       (filter
+        #(not (= nil %))
+        (map (fn [tree-node]
+               (h-get-sub-todos-tree (:sub-todos tree-node) todo))
+             todos-trees)))
+      )))
+
+;; todo: faster?
+(defn get-sub-todos-tree [todos todo]
+  (h-get-sub-todos-tree (todo-list-to-tree todos) todo))
